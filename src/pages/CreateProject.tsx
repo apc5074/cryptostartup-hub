@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useWallet } from "@/context/WalletContext";
+import projectService from "@/backend/services/ProjectService";
 
 // Form schema
 const formSchema = z.object({
@@ -73,33 +73,35 @@ const CreateProject = () => {
     );
   }
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     
-    // In a real app, this would be an API call to create the project
-    setTimeout(() => {
-      // Create a new project object
-      const newProject = {
+    try {
+      const newProject = await projectService.createProject({
         ...values,
-        id: Date.now().toString(),
-        raisedAmount: 0,
-        investors: 0,
         createdBy: address
-      };
+      });
       
       console.log("New project created:", newProject);
       
-      // Show success toast
       toast({
         title: "Project Created Successfully",
         description: "Your project has been created and is now live.",
         duration: 5000,
       });
       
-      setIsSubmitting(false);
-      // Redirect to the project detail page
       navigate(`/project/${newProject.id}`);
-    }, 1500);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast({
+        title: "Error Creating Project",
+        description: "There was an error creating your project. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (

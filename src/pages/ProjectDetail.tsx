@@ -5,7 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import InvestmentModal from "@/components/InvestmentModal";
-import { Project } from "@/components/ProjectCard";
+import { Project } from "@/backend/models/Project";
+import projectService from "@/backend/services/ProjectService";
 
 // Import refactored components
 import ProjectHeader from "@/components/project/ProjectHeader";
@@ -15,7 +16,7 @@ import ProjectRoadmap from "@/components/project/ProjectRoadmap";
 import ProjectSidebar from "@/components/project/ProjectSidebar";
 import LoadingState from "@/components/project/LoadingState";
 import ProjectNotFound from "@/components/project/ProjectNotFound";
-import { mockProjects, teamMembers, milestones, TeamMember, Milestone } from "@/components/project/ProjectData";
+import { TeamMember, Milestone } from "@/components/project/ProjectData";
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,21 +27,39 @@ const ProjectDetail = () => {
   const [investModalOpen, setInvestModalOpen] = useState(false);
   
   useEffect(() => {
-    // Simulate API fetch
-    const fetchProjectDetails = () => {
+    // Use our service to fetch project details
+    const fetchProjectDetails = async () => {
+      if (!id) return;
+      
       setIsLoading(true);
-      setTimeout(() => {
-        if (id && mockProjects[id]) {
-          setProject(mockProjects[id]);
-          setTeamData(teamMembers[id] || []);
-          setMilestoneData(milestones[id] || []);
-        }
+      try {
+        const { project, team, milestones } = await projectService.getProjectDetails(id);
+        setProject(project);
+        setTeamData(team);
+        setMilestoneData(milestones);
+      } catch (error) {
+        console.error("Error fetching project details:", error);
+      } finally {
         setIsLoading(false);
-      }, 600);
+      }
     };
     
     fetchProjectDetails();
   }, [id]);
+  
+  // Handle investment 
+  const handleInvestment = async (amount: number) => {
+    if (!id || !project) return;
+    
+    try {
+      const updatedProject = await projectService.investInProject(id, amount);
+      if (updatedProject) {
+        setProject(updatedProject);
+      }
+    } catch (error) {
+      console.error("Error processing investment:", error);
+    }
+  };
   
   if (isLoading) {
     return <LoadingState />;
