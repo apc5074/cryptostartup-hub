@@ -8,6 +8,7 @@ import { WalletProvider } from "./context/WalletContext";
 import Index from "./pages/Index";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
+import CreateProject from "./pages/CreateProject";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/project/:id" element={<ProjectDetail />} />
+            <Route path="/create-project" element={<CreateProject />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +6,9 @@ import { Search, ArrowDownUp, Filter } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProjectCard, { Project } from "@/components/ProjectCard";
+import CreateProjectCard from "@/components/project/CreateProjectCard";
+import { useWallet } from "@/context/WalletContext";
 
-// Extended mock data for projects listing page
 const mockAllProjects: Project[] = [
   {
     id: '1',
@@ -102,16 +102,14 @@ const Projects = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
+  const { isConnected } = useWallet();
   
-  // Simulate fetching data
   useEffect(() => {
     const fetchProjects = () => {
       setIsLoading(true);
-      // In a real app, this would be an API call with filtering parameters
       setTimeout(() => {
         let filteredProjects = [...mockAllProjects];
         
-        // Apply search filter
         if (searchQuery) {
           filteredProjects = filteredProjects.filter(project => 
             project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -119,16 +117,13 @@ const Projects = () => {
           );
         }
         
-        // Apply category filter
         if (categoryFilter !== 'all') {
           filteredProjects = filteredProjects.filter(project => 
             project.category.toLowerCase() === categoryFilter.toLowerCase()
           );
         }
         
-        // Apply sorting
         if (sortBy === 'newest') {
-          // No sorting needed as this is the default
         } else if (sortBy === 'funding') {
           filteredProjects.sort((a, b) => 
             (b.raisedAmount / b.targetAmount) - (a.raisedAmount / a.targetAmount)
@@ -161,7 +156,6 @@ const Projects = () => {
               </p>
             </div>
             
-            {/* Search and Filters */}
             <div className="mb-8 animate-fade-up animation-delay-200">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
@@ -220,7 +214,6 @@ const Projects = () => {
               </div>
             </div>
             
-            {/* Projects Grid */}
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -238,6 +231,12 @@ const Projects = () => {
               </div>
             ) : projects.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {isConnected && (
+                  <div className="animate-fade-up">
+                    <CreateProjectCard />
+                  </div>
+                )}
+                
                 {projects.map((project, index) => (
                   <div 
                     key={project.id} 
