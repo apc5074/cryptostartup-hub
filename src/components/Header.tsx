@@ -2,12 +2,22 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, X, Wallet } from "lucide-react";
+import { Menu, X, Wallet, LogOut, User } from "lucide-react";
+import { useWallet } from "@/context/WalletContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { address, isConnected, isConnecting, connectWallet, disconnectWallet } = useWallet();
   
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +31,12 @@ const Header = () => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
+
+  // Format address for display (e.g., 0x1234...5678)
+  const formatAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
   
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -46,12 +62,48 @@ const Header = () => {
           
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              Sign In
-            </Button>
-            <Button size="sm">
-              Connect Wallet
-            </Button>
+            {isConnected ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <User className="h-4 w-4" />
+                    {formatAddress(address || '')}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-investments" className="cursor-pointer">My Investments</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings" className="cursor-pointer">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={disconnectWallet} className="text-red-500 cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Disconnect
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                size="sm" 
+                onClick={connectWallet}
+                disabled={isConnecting}
+              >
+                {isConnecting ? 
+                  "Connecting..." : 
+                  <>
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Connect Wallet
+                  </>
+                }
+              </Button>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
@@ -76,8 +128,36 @@ const Header = () => {
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
             <div className="flex items-center justify-around px-5">
-              <Button variant="outline" className="w-full mr-2">Sign In</Button>
-              <Button className="w-full ml-2">Connect Wallet</Button>
+              {isConnected ? (
+                <div className="flex flex-col w-full gap-2 px-5">
+                  <div className="flex items-center p-2 bg-gray-50 rounded-md">
+                    <User className="h-5 w-5 text-gray-500 mr-2" />
+                    <span className="text-sm font-medium">{formatAddress(address || '')}</span>
+                  </div>
+                  <Button 
+                    onClick={disconnectWallet} 
+                    variant="outline"
+                    className="w-full text-red-500"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  className="w-full" 
+                  onClick={connectWallet}
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? 
+                    "Connecting..." : 
+                    <>
+                      <Wallet className="h-4 w-4 mr-2" />
+                      Connect Wallet
+                    </>
+                  }
+                </Button>
+              )}
             </div>
           </div>
         </div>
